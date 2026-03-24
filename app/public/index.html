@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>a11y Contrast Checker</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f5f5f5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      }
+
+      h1 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 0.4rem;
+      }
+
+      .subtitle {
+        font-size: 0.875rem;
+        color: #666;
+        margin-bottom: 2rem;
+      }
+
+      label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .color-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+
+      input[type="color"] {
+        width: 48px;
+        height: 48px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 2px;
+        cursor: pointer;
+        background: none;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: monospace;
+        color: #111;
+        transition: border-color 0.2s;
+      }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #6c63ff;
+      }
+
+      button {
+        width: 100%;
+        padding: 0.875rem;
+        background: #6c63ff;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        transition: background 0.2s;
+      }
+
+      button:hover { background: #574fd6; }
+
+      .preview {
+        margin-top: 1.5rem;
+        border-radius: 8px;
+        padding: 1.25rem;
+        text-align: center;
+        border: 2px solid #e0e0e0;
+        transition: all 0.3s;
+      }
+
+      .preview .ratio {
+        font-size: 2rem;
+        font-weight: 800;
+      }
+
+      .preview .ratio-label {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-top: 0.25rem;
+      }
+
+      .results {
+        margin-top: 1.25rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      .result-item {
+        padding: 0.875rem;
+        border-radius: 8px;
+        text-align: center;
+        border: 2px solid transparent;
+      }
+
+      .result-item.pass {
+        background: #f0fdf4;
+        border-color: #86efac;
+        color: #166534;
+      }
+
+      .result-item.fail {
+        background: #fef2f2;
+        border-color: #fca5a5;
+        color: #991b1b;
+      }
+
+      .result-item .level {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+      }
+
+      .result-item .status {
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+
+      .result-item .description {
+        font-size: 0.7rem;
+        margin-top: 0.2rem;
+        opacity: 0.8;
+      }
+
+      .hidden { display: none; }
+      .error { color: #dc2626; font-size: 0.875rem; margin-top: 0.75rem; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>a11y Contrast Checker</h1>
+      <p class="subtitle">WCAG 2.2 color contrast ratio evaluator</p>
+
+      <div>
+        <label for="fg-text">Foreground (text color)</label>
+        <div class="color-row">
+          <input type="color" id="fg-picker" value="#000000" />
+          <input type="text" id="fg-text" value="#000000" maxlength="7" />
+        </div>
+      </div>
+
+      <div>
+        <label for="bg-text">Background color</label>
+        <div class="color-row">
+          <input type="color" id="bg-picker" value="#ffffff" />
+          <input type="text" id="bg-text" value="#ffffff" maxlength="7" />
+        </div>
+      </div>
+
+      <button onclick="checkContrast()">Check Contrast</button>
+      <p id="error" class="error hidden"></p>
+
+      <div id="preview" class="preview hidden">
+        <div class="ratio" id="ratio-value"></div>
+        <div class="ratio-label">Contrast Ratio</div>
+      </div>
+
+      <div id="results" class="results hidden"></div>
+    </div>
+
+    <script>
+      // Sync color picker → text input
+      document.getElementById("fg-picker").addEventListener("input", (e) => {
+        document.getElementById("fg-text").value = e.target.value;
+      });
+      document.getElementById("bg-picker").addEventListener("input", (e) => {
+        document.getElementById("bg-text").value = e.target.value;
+      });
+
+      // Sync text input → color picker
+      document.getElementById("fg-text").addEventListener("input", (e) => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+          document.getElementById("fg-picker").value = e.target.value;
+        }
+      });
+      document.getElementById("bg-text").addEventListener("input", (e) => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+          document.getElementById("bg-picker").value = e.target.value;
+        }
+      });
+
+      async function checkContrast() {
+        const foreground = document.getElementById("fg-text").value.trim();
+        const background = document.getElementById("bg-text").value.trim();
+        const errorEl = document.getElementById("error");
+        const previewEl = document.getElementById("preview");
+        const resultsEl = document.getElementById("results");
+
+        errorEl.classList.add("hidden");
+
+        try {
+          const res = await fetch("/check", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ foreground, background }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            errorEl.textContent = data.error;
+            errorEl.classList.remove("hidden");
+            previewEl.classList.add("hidden");
+            resultsEl.classList.add("hidden");
+            return;
+          }
+
+          // Update preview swatch
+          previewEl.style.background = background;
+          previewEl.style.color = foreground;
+          previewEl.style.borderColor = "#e0e0e0";
+          document.getElementById("ratio-value").textContent =
+            data.contrastRatio + ":1";
+          previewEl.classList.remove("hidden");
+
+          // Render results grid
+          const { AA, AAA } = data.wcag;
+          resultsEl.innerHTML = [
+            { level: "AA", label: "Normal Text", pass: AA.normalText, req: "4.5:1" },
+            { level: "AA", label: "Large Text",  pass: AA.largeText,  req: "3.0:1" },
+            { level: "AAA", label: "Normal Text", pass: AAA.normalText, req: "7.0:1" },
+            { level: "AAA", label: "Large Text",  pass: AAA.largeText,  req: "4.5:1" },
+          ]
+            .map(
+              ({ level, label, pass, req }) => `
+              <div class="result-item ${pass ? "pass" : "fail"}">
+                <div class="level">${level}</div>
+                <div class="status">${pass ? "✓ Pass" : "✗ Fail"}</div>
+                <div class="description">${label} · ${req}</div>
+              </div>`
+            )
+            .join("");
+
+          resultsEl.classList.remove("hidden");
+        } catch (err) {
+          errorEl.textContent = "Could not reach the server. Is Docker running?";
+          errorEl.classList.remove("hidden");
+        }
+      }
+    </script>
+  </body>
+</html>
