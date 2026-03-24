@@ -1,40 +1,25 @@
-# a11y Contrast Checker
+# docker-fundamentals
 
-A Dockerized web application that computes WCAG 2.2 color contrast ratios and evaluates AA and AAA compliance — built to make accessibility auditing faster for designers and developers.
+A Dockerized web application for WCAG 2.2 color contrast checking, alongside a hands-on exploration of core Docker concepts including image management, container lifecycle, and runtime behavior.
 
 ## Why I built this
 
-During accessibility audits across multiple frontend projects, I found myself manually checking color contrast ratios against WCAG 2.2 standards repeatedly. I built and containerized this tool to automate that process and make compliance checking immediately accessible from any environment without local setup.
+During accessibility audits across multiple frontend projects, I found myself manually checking color contrast ratios against WCAG 2.2 standards repeatedly. I built and containerized this tool to automate that process — making compliance checking immediately accessible from any environment without local setup.
 
-## What it does
+---
 
-- Accepts any two hex colors (foreground and background)
-- Computes the contrast ratio using the WCAG 2.2 relative luminance formula
-- Returns pass/fail results for AA and AAA compliance at both normal and large text sizes
-- Serves a clean UI and a REST API endpoint
+## a11y Contrast Checker
 
-## WCAG 2.2 Contrast Requirements
+A web app that computes contrast ratios between two colors and evaluates AA and AAA compliance at both normal and large text sizes.
+
+### WCAG 2.2 Requirements
 
 | Level | Normal Text | Large Text |
-|-------|------------|------------|
-| AA    | 4.5:1      | 3.0:1      |
-| AAA   | 7.0:1      | 4.5:1      |
+|-------|-------------|------------|
+| AA    | 4.5:1       | 3.0:1      |
+| AAA   | 7.0:1       | 4.5:1      |
 
-## Project structure
-
-```
-docker-fundamentals/
-├── Dockerfile              # Container build instructions
-├── docker-compose.yml      # Service configuration
-├── docker-demo.sh          # Docker fundamentals reference script
-└── app/
-    ├── server.js           # Express API with WCAG contrast logic
-    ├── package.json
-    └── public/
-        └── index.html      # Browser UI
-```
-
-## How to run
+### How to run
 
 **With Docker Compose (recommended):**
 ```bash
@@ -48,7 +33,8 @@ docker build -t a11y-contrast-checker ./app
 docker run -p 3000:3000 a11y-contrast-checker
 ```
 
-**API usage:**
+### API usage
+
 ```bash
 curl -X POST http://localhost:3000/check \
   -H "Content-Type: application/json" \
@@ -68,10 +54,55 @@ Response:
 }
 ```
 
+---
+
+## Docker Fundamentals Demo
+
+A reference script covering core Docker commands for working with images and containers.
+
+```bash
+chmod +x docker-demo.sh
+./docker-demo.sh
+```
+
+Or run individual commands manually:
+
+```bash
+# Verify Docker works
+docker run hello-world
+
+# Pull a lightweight image
+docker pull busybox
+
+# Run a command inside a container
+docker run busybox echo "hello world from Yara"
+
+# See all containers including exited ones
+docker ps -a
+```
+
+**Images** are read-only templates pulled from Docker Hub. **Containers** are running instances of those images. When a container has no command to run, it exits immediately — this is expected behavior, not an error.
+
+---
+
+## Project structure
+
+```
+docker-fundamentals/
+├── docker-compose.yml       # Service configuration
+├── docker-demo.sh           # Docker fundamentals reference script
+└── app/
+    ├── Dockerfile           # Container build instructions
+    ├── server.js            # Express API with WCAG contrast logic
+    ├── package.json
+    └── public/
+        └── index.html       # Browser UI
+```
+
 ## Tech stack
 
 Node.js · Express · Docker · WCAG 2.2
 
 ## Environment
 
-Tested on macOS (Apple Silicon) with Docker Desktop 28.x.
+Tested on macOS (Apple Silicon) with Docker Desktop 28.x and Ubuntu 24.04 LTS (ARM).
