@@ -63,7 +63,7 @@ echo "[8] Listing all containers including exited ones..."
 docker ps -a
 
 # --------------------------------------------------------------
-# Step 6: Run busybox interactively (optional exploration)
+# Step 6: Run busybox interactively 
 # Uncomment the line below to drop into a shell inside busybox
 # --------------------------------------------------------------
 # docker run -it busybox sh
