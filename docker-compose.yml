@@ -1,0 +1,9 @@
+services:
+  a11y-contrast-checker:
+    build:
+      context: ./app
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    restart: unless-stopped
